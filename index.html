@@ -1,14 +1,935 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fitscout — your outfit director</title>
-    <meta name="description" content="AI-powered fashion outfit recommender for any event." />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>fitscout — your outfit director</title>
+  <meta name="description" content="AI-powered fashion outfit recommender for any event." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* =========================================================
+       fitscout — styles
+       Editorial, minimal fashion aesthetic.
+       Palette: warm off-white, deep charcoal, terracotta accent.
+       ========================================================= */
+
+    :root {
+      --bg:        #F7F4EF;
+      --surface:   #FFFFFF;
+      --border:    #E2DDD6;
+      --text-dark: #1C1A17;
+      --text-mid:  #5C5752;
+      --text-light:#9B978F;
+      --accent:    #C4612B;
+      --tag-bg:    #EDE9E2;
+      --shadow:    0 4px 24px rgba(28,26,23,0.07);
+      --radius:    12px;
+      --radius-sm: 6px;
+      --transition:0.2s ease;
+      --max-w:     960px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-dark);
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* App wrapper */
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 24px 16px 80px;
+    }
+
+    /* Typography */
+    .wordmark {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.4rem,6vw,4rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-dark);
+      margin-bottom: 8px;
+    }
+    .tagline {
+      font-size: 1rem;
+      color: var(--text-mid);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 300;
+      margin-bottom: 48px;
+    }
+    .section-heading {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.6rem,4vw,2.4rem);
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 8px;
+    }
+    .section-sub {
+      font-size: 0.95rem;
+      color: var(--text-mid);
+      margin-bottom: 36px;
+    }
+
+    /* Landing */
+    .landing-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      width: 100%;
+      max-width: 700px;
+      padding-top: clamp(60px,10vh,120px);
+    }
+    .landing-form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .event-input {
+      width: 100%;
+      padding: 20px 24px;
+      font-family: 'Inter', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 300;
+      color: var(--text-dark);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .event-input:focus {
+      border-color: var(--text-dark);
+      box-shadow: 0 0 0 3px rgba(28,26,23,0.06);
+    }
+    .event-input::placeholder { color: var(--text-light); }
+    .cta-btn {
+      padding: 18px 36px;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--surface);
+      background: var(--text-dark);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background var(--transition), transform var(--transition);
+    }
+    .cta-btn:hover:not(:disabled) { background: var(--accent); transform: translateY(-1px); }
+    .cta-btn:disabled { opacity: 0.35; cursor: default; }
+    .landing-hint {
+      margin-top: 24px;
+      font-size: 0.82rem;
+      color: var(--text-light);
+      line-height: 1.8;
+    }
+
+    /* Interview */
+    .interview-screen {
+      width: 100%;
+      max-width: 640px;
+      padding-top: 48px;
+    }
+    .interview-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 40px 36px;
+      box-shadow: var(--shadow);
+    }
+    .step-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .step-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-light);
+    }
+    .progress-dots { display: flex; gap: 6px; }
+    .progress-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background var(--transition);
+    }
+    .progress-dot.active { background: var(--text-dark); }
+    .progress-dot.done   { background: var(--accent); }
+    .event-context {
+      font-size: 0.85rem;
+      color: var(--text-mid);
+      background: var(--tag-bg);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .event-context-label { font-weight: 600; color: var(--text-dark); margin-right: 4px; }
+    .question-text {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.3rem,3vw,1.8rem);
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 28px;
+      line-height: 1.3;
+    }
+    .option-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 32px; }
+    .chip {
+      padding: 10px 18px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: var(--text-mid);
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .chip:hover { border-color: var(--text-dark); color: var(--text-dark); }
+    .chip.chip-selected { background: var(--text-dark); color: var(--surface); border-color: var(--text-dark); }
+
+    /* Loading */
+    .loading-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding-top: clamp(80px,20vh,160px);
+    }
+    .loading-dot-row { display: flex; gap: 10px; }
+    .loading-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--text-dark);
+      animation: bounce 1.2s infinite ease-in-out;
+    }
+    .loading-dot.d2 { animation-delay: 0.2s; }
+    .loading-dot.d3 { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%,80%,100% { transform: scale(0.6); opacity: 0.4; }
+      40%          { transform: scale(1.2); opacity: 1; }
+    }
+    .loading-text {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1.2rem;
+      color: var(--text-mid);
+      min-height: 1.6em;
+    }
+
+    /* Recommendation */
+    .recommendation-screen { width: 100%; max-width: var(--max-w); padding-top: 48px; }
+    .theme-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px,1fr));
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    .theme-card {
+      position: relative;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: var(--shadow);
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .theme-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(28,26,23,0.12); }
+    .price-badge {
+      position: absolute; top: 20px; right: 20px;
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em;
+      color: var(--accent);
+      background: rgba(196,97,43,0.08);
+      padding: 4px 10px; border-radius: 999px;
+    }
+    .theme-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem; font-weight: 700;
+      color: var(--text-dark); line-height: 1.3;
+      padding-right: 36px;
+    }
+    .theme-description { font-size: 0.92rem; color: var(--text-mid); line-height: 1.65; }
+    .theme-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+    .vibe-tag {
+      font-size: 0.75rem; font-weight: 500;
+      color: var(--text-mid); background: var(--tag-bg);
+      padding: 4px 10px; border-radius: 999px; letter-spacing: 0.03em;
+    }
+    .theme-why { font-size: 0.82rem; color: var(--text-light); line-height: 1.5; }
+    .why-label { font-weight: 600; color: var(--text-mid); }
+    .select-theme-btn {
+      margin-top: auto;
+      padding: 14px 20px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--surface); background: var(--text-dark);
+      border: none; border-radius: var(--radius-sm);
+      cursor: pointer; transition: background var(--transition);
+    }
+    .select-theme-btn:hover { background: var(--accent); }
+
+    /* Refinement */
+    .refinement-section { margin-top: 8px; }
+    .refinement-label { font-size: 0.85rem; color: var(--text-light); margin-bottom: 14px; letter-spacing: 0.03em; }
+    .refinement-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+    .refinement-btn {
+      padding: 10px 18px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem; font-weight: 500;
+      color: var(--text-mid); background: var(--surface);
+      border: 1.5px solid var(--border); border-radius: 999px;
+      cursor: pointer; transition: all var(--transition);
+    }
+    .refinement-btn:hover { border-color: var(--text-dark); color: var(--text-dark); }
+    .refinement-btn.refinement-btn-active { background: var(--text-dark); color: var(--surface); border-color: var(--text-dark); }
+
+    /* Output */
+    .output-screen { width: 100%; max-width: var(--max-w); padding-top: 48px; }
+    .output-header { margin-bottom: 36px; }
+    .output-sub { font-size: 0.9rem; color: var(--text-mid); }
+    .theme-title-inline { font-style: italic; color: var(--accent); }
+    .component-cards { display: flex; flex-direction: column; gap: 20px; margin-bottom: 48px; }
+    .component-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 28px;
+      box-shadow: var(--shadow);
+    }
+    .comp-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 10px; }
+    .comp-emoji { font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+    .comp-category {
+      font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-light); margin-bottom: 2px;
+    }
+    .comp-item-label {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem; font-weight: 700;
+      color: var(--text-dark); line-height: 1.3;
+    }
+    .comp-reason { font-size: 0.87rem; color: var(--text-mid); margin-bottom: 16px; line-height: 1.5; }
+    .store-links { display: flex; flex-wrap: wrap; gap: 8px; }
+    .store-link {
+      display: inline-block;
+      padding: 8px 14px;
+      font-size: 0.8rem; font-weight: 500; letter-spacing: 0.04em;
+      color: var(--text-dark); background: var(--tag-bg);
+      border: 1px solid var(--border); border-radius: 999px;
+      text-decoration: none;
+      transition: background var(--transition), color var(--transition);
+    }
+    .store-link:hover { background: var(--text-dark); color: var(--surface); }
+    .back-btn {
+      padding: 12px 24px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem; font-weight: 500;
+      color: var(--text-mid); background: transparent;
+      border: 1.5px solid var(--border); border-radius: 999px;
+      cursor: pointer; transition: all var(--transition);
+    }
+    .back-btn:hover { color: var(--text-dark); border-color: var(--text-dark); }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      #app { padding: 16px 12px 60px; }
+      .interview-card { padding: 28px 20px; }
+      .theme-cards { grid-template-columns: 1fr; }
+      .component-card { padding: 22px 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    // =========================================================
+    // fitscout — vanilla JS app
+    // No build step. Open index.html directly in a browser.
+    // =========================================================
+
+    // ─── DATA ────────────────────────────────────────────────
+    // Mock trend database + outfit themes.
+    // Inspired by Vogue, GQ, Highsnobiety, The Cut, Depop, etc.
+
+    const outfitThemes = [
+      {
+        id: "dark-gallery-romantic",
+        name: "Dark Gallery Romantic",
+        description: "Rich textures meet moody palette in a look that feels both intellectual and alluring. Think velvet, lace, and deep jewel tones that command a room without trying.",
+        vibeTags: ["dark romantic", "sheer layers", "statement boots"],
+        vibes: ["femme", "bold", "experimental", "sexy"],
+        events: ["dinner", "date", "gallery/art event", "concert"],
+        price: "$$",
+        components: {
+          top:         { label: "Velvet or lace bodysuit",          query: "black lace bodysuit" },
+          bottom:      { label: "Velvet midi skirt",                query: "velvet midi skirt dark" },
+          outerwear:   { label: "Oversized blazer in black",        query: "oversized black blazer women" },
+          accessories: { label: "Gold statement earrings",          query: "gold statement drop earrings" },
+          shoes:       { label: "Square-toe ankle boots",           query: "square toe ankle boots black" },
+        },
+      },
+      {
+        id: "relaxed-luxe-dinner",
+        name: "Relaxed Luxe Dinner Fit",
+        description: "Elevated basics in luxurious fabrics—silk, cashmere, or satin—styled with quiet confidence. This look says effort without looking like you tried.",
+        vibeTags: ["relaxed luxury", "monochrome minimalism", "soft tailoring"],
+        vibes: ["polished", "understated", "casual"],
+        events: ["dinner", "work event", "gallery/art event", "date"],
+        price: "$$$",
+        components: {
+          top:         { label: "Silk or satin blouse",             query: "silk satin blouse women" },
+          bottom:      { label: "Wide-leg dress pants",             query: "wide leg dress pants women" },
+          outerwear:   { label: "Cashmere or wool coat",            query: "cashmere coat women" },
+          accessories: { label: "Minimalist watch or cuff",         query: "minimalist gold cuff bracelet" },
+          shoes:       { label: "Pointed-toe heels or loafers",     query: "pointed toe leather loafer women" },
+        },
+      },
+      {
+        id: "masc-club-uniform",
+        name: "Masc Club Uniform",
+        description: "Clean lines, dark tones, and just enough edge to turn heads on the dancefloor. Masculine silhouettes with a sleek, put-together energy.",
+        vibeTags: ["oversized tailoring", "leather accents", "monochrome minimalism"],
+        vibes: ["masc", "bold", "understated", "polished"],
+        events: ["party", "concert", "dinner", "date"],
+        price: "$$",
+        components: {
+          top:         { label: "Black fitted crewneck or turtleneck", query: "black fitted turtleneck men" },
+          bottom:      { label: "Slim tailored trousers",            query: "slim tailored trousers men black" },
+          outerwear:   { label: "Leather or faux-leather jacket",    query: "black leather jacket men slim" },
+          accessories: { label: "Silver chain necklace",             query: "silver chain necklace men" },
+          shoes:       { label: "Chelsea boots or clean sneakers",   query: "black chelsea boots men" },
+        },
+      },
+      {
+        id: "soft-tailoring-edge",
+        name: "Soft Tailoring with Edge",
+        description: "Structured shapes softened by unexpected details—a sheer insert, an asymmetric hem, or a bold accessory. Perfect when you want to look sharp but not stiff.",
+        vibeTags: ["soft tailoring", "sheer layers", "metallic accessories"],
+        vibes: ["polished", "femme", "experimental", "bold"],
+        events: ["work event", "wedding", "dinner", "gallery/art event"],
+        price: "$$",
+        components: {
+          top:         { label: "Sheer button-down or structured blouse", query: "sheer button down blouse women" },
+          bottom:      { label: "High-waist wide-leg trousers",       query: "high waist wide leg trousers women" },
+          outerwear:   { label: "Cropped structured blazer",          query: "cropped structured blazer women" },
+          accessories: { label: "Statement belt or metallic clip",    query: "silver statement belt women" },
+          shoes:       { label: "Block heels or mules",               query: "block heel mules women" },
+        },
+      },
+      {
+        id: "y2k-club-fever",
+        name: "Y2K Club Fever",
+        description: "Low-rise denim, crop tops, and butterfly clips are back and they mean business. This look leans into nostalgia with a modern, elevated twist.",
+        vibeTags: ["Y2K clubwear", "metallic accessories", "cropped outerwear"],
+        vibes: ["bold", "femme", "sexy", "experimental"],
+        events: ["party", "concert", "festival"],
+        price: "$",
+        components: {
+          top:         { label: "Strappy crop top or halter",        query: "strappy halter crop top women" },
+          bottom:      { label: "Low-rise flare jeans or mini skirt",query: "low rise flare jeans women y2k" },
+          outerwear:   { label: "Cropped faux-fur or leather jacket", query: "cropped faux fur jacket women" },
+          accessories: { label: "Butterfly clips and layered necklaces", query: "butterfly hair clips y2k jewelry set" },
+          shoes:       { label: "Platform sneakers or chunky sandals",query: "platform sneakers women chunky" },
+        },
+      },
+      {
+        id: "festival-utility",
+        name: "Festival Utility Fit",
+        description: "Functional meets fashionable in this layered, pockets-first look that keeps you moving all day. Think cargo, tech fabrics, and statement footwear.",
+        vibeTags: ["utilitywear", "vintage denim", "statement boots"],
+        vibes: ["casual", "masc", "experimental", "understated"],
+        events: ["festival", "concert", "other"],
+        price: "$",
+        components: {
+          top:         { label: "Graphic tee or tank",              query: "vintage graphic tee oversized" },
+          bottom:      { label: "Cargo or utility pants",           query: "cargo pants women utility" },
+          outerwear:   { label: "Denim or tech bomber jacket",      query: "denim bomber jacket" },
+          accessories: { label: "Crossbody bag or bum bag",         query: "crossbody bum bag festival" },
+          shoes:       { label: "Chunky boots or platform sneakers",query: "chunky combat boots women" },
+        },
+      },
+      {
+        id: "sporty-prep-event",
+        name: "Sporty-Prep Daytime",
+        description: "Clean, collegiate energy with polo shirts, pleated trousers, and just enough swagger. Casual enough to breathe, polished enough to impress.",
+        vibeTags: ["sporty-prep", "vintage denim", "oversized tailoring"],
+        vibes: ["casual", "masc", "understated"],
+        events: ["work event", "concert", "other", "festival"],
+        price: "$",
+        components: {
+          top:         { label: "Polo shirt or ribbed knit",         query: "polo shirt men cotton" },
+          bottom:      { label: "Pleated chinos or straight-leg jeans", query: "pleated chino pants men" },
+          outerwear:   { label: "Track jacket or light windbreaker", query: "track jacket men bomber" },
+          accessories: { label: "Cap or minimal bag",                query: "baseball cap men structured" },
+          shoes:       { label: "White leather sneakers or loafers", query: "white leather sneakers men clean" },
+        },
+      },
+      {
+        id: "wedding-guest-glam",
+        name: "Wedding Guest Glam",
+        description: "Elegant but not overdressed, this look nails the wedding guest brief with flowing fabrics, soft color, and refined accessories. You'll look great in photos.",
+        vibeTags: ["soft tailoring", "metallic accessories", "relaxed luxury"],
+        vibes: ["polished", "femme", "understated"],
+        events: ["wedding", "dinner", "work event"],
+        price: "$$$",
+        components: {
+          top:         { label: "Floral or solid midi dress",        query: "midi dress wedding guest floral" },
+          bottom:      { label: "(included in dress)",               query: "elegant midi dress women" },
+          outerwear:   { label: "Light wrap or pashmina",            query: "silk wrap shawl women evening" },
+          accessories: { label: "Delicate pearl or gold jewelry",    query: "pearl earrings women elegant" },
+          shoes:       { label: "Strappy heels or block heels",      query: "strappy heels women elegant wedding" },
+        },
+      },
+    ];
+
+    // Constraint modifiers: map constraint answers to score adjustments
+    const constraintModifiers = {
+      "low budget":        { maxPrice: "$",  priceBoost: { "$": 2, "$$": -1, "$$$": -3 } },
+      "comfortable shoes": { shoeNote: "flat or low-heel" },
+      "cold weather":      { layerBoost: ["oversized tailoring", "cropped outerwear", "relaxed luxury"] },
+      "warm weather":      { layerPenalty: ["oversized tailoring", "cropped outerwear"] },
+      "use items I own":   { diyNote: true },
+      "no constraints":    {},
+    };
+
+    // Refinement modifiers: map button labels to vibe/price adjustments
+    const refinements = {
+      "Make it sexier":       { addVibes: ["sexy", "femme", "bold"] },
+      "Make it more casual":  { addVibes: ["casual", "understated"] },
+      "Make it less expensive": { maxPrice: "$" },
+      "Make it more masc":    { addVibes: ["masc", "understated"] },
+      "Make it more femme":   { addVibes: ["femme", "bold", "experimental"] },
+      "Use items I own":      { diyNote: true },
+    };
+
+    // ─── MATCHER ─────────────────────────────────────────────
+    // Scores themes and returns top 3 based on user's answers.
+
+    const priceRank = { "$": 1, "$$": 2, "$$$": 3 };
+
+    function scoreTheme(theme, eventType, vibe, constraint, extraVibes) {
+      let score = 0;
+      if (theme.events.includes(eventType)) score += 3;
+      [vibe, ...extraVibes].forEach(v => { if (theme.vibes.includes(v)) score += 2; });
+      const mod = constraintModifiers[constraint] || {};
+      if (mod.priceBoost) score += (mod.priceBoost[theme.price] || 0);
+      if (mod.maxPrice && priceRank[theme.price] > priceRank[mod.maxPrice]) score -= 5;
+      if (extraVibes._priceMax && priceRank[theme.price] > priceRank[extraVibes._priceMax]) score -= 5;
+      return score;
+    }
+
+    function getTopThemes(eventType, vibe, constraint, refinement) {
+      const extraVibes = [];
+      if (refinement && refinements[refinement]) {
+        const mod = refinements[refinement];
+        if (mod.addVibes) extraVibes.push(...mod.addVibes);
+        if (mod.maxPrice) extraVibes._priceMax = mod.maxPrice;
+      }
+      const scored = outfitThemes.map(t => ({ ...t, score: scoreTheme(t, eventType, vibe, constraint, extraVibes) }));
+      scored.sort((a, b) => b.score - a.score);
+      return scored.slice(0, 3);
+    }
+
+    function buildSearchLinks(theme, constraint) {
+      const mod = constraintModifiers[constraint] || {};
+      const compMeta = {
+        top:         { emoji: "👕", label: "Top" },
+        bottom:      { emoji: "👖", label: "Bottom" },
+        outerwear:   { emoji: "🧥", label: "Outerwear" },
+        accessories: { emoji: "💍", label: "Accessories" },
+        shoes:       { emoji: "👟", label: "Shoes" },
+      };
+      const reasons = {
+        top:         `Anchors the ${theme.name} look with the right texture and silhouette.`,
+        bottom:      `Grounds the outfit and balances the overall proportions.`,
+        outerwear:   `Adds structure and layers that pull the full look together.`,
+        accessories: `The finishing detail that elevates the outfit from good to memorable.`,
+        shoes:       `The foundation—good shoes make or break the whole aesthetic.`,
+      };
+      return ["top","bottom","outerwear","accessories","shoes"].map(key => {
+        const comp = theme.components[key];
+        let query = comp.query;
+        if (key === "shoes" && mod.shoeNote) query = query.replace(/(heel|boot)/i, "flat $1");
+        const stores = [
+          { name: "Google Shopping", url: `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(query)}` },
+          { name: "Depop",           url: `https://www.depop.com/search/?q=${encodeURIComponent(query)}` },
+          { name: "ASOS",            url: `https://www.asos.com/search/?q=${encodeURIComponent(query)}` },
+          { name: "eBay",            url: `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(query)}` },
+          { name: "Etsy",            url: `https://www.etsy.com/search?q=${encodeURIComponent(query)}` },
+        ];
+        return { key, emoji: compMeta[key].emoji, category: compMeta[key].label, label: comp.label, reason: reasons[key], links: stores };
+      });
+    }
+
+    // ─── APP STATE ───────────────────────────────────────────
+    // Single state object for the whole app.
+
+    const state = {
+      screen: "landing",      // "landing"|"interview"|"loading"|"recommend"|"output"
+      eventPrompt: "",
+      answers: {},            // { eventType, vibe, constraint }
+      themes: [],
+      refinement: null,
+      selectedTheme: null,
+      components: [],
+      // interview-specific (persists between re-renders)
+      interviewStep: 0,       // 0 = event type, 1 = vibe, 2 = constraint
+      interviewSelected: null,// currently highlighted chip
+    };
+
+    // ─── QUESTIONS ───────────────────────────────────────────
+
+    const QUESTIONS = [
+      {
+        id: "eventType",
+        prompt: "What kind of event is this?",
+        options: ["party","dinner","wedding","work event","date","concert","festival","gallery/art event","other"],
+      },
+      {
+        id: "vibe",
+        prompt: "What vibe do you want?",
+        options: ["sexy","casual","polished","masc","femme","experimental","understated","bold"],
+      },
+      {
+        id: "constraint",
+        prompt: "Any constraints?",
+        options: ["low budget","comfortable shoes","cold weather","warm weather","use items I own","no constraints"],
+      },
+    ];
+
+    const REFINEMENT_BUTTONS = [
+      "Make it sexier",
+      "Make it more casual",
+      "Make it less expensive",
+      "Make it more masc",
+      "Make it more femme",
+      "Use items I own",
+    ];
+
+    const LOADING_LINES = [
+      "Reading the room…",
+      "Pulling references…",
+      "Checking the archives…",
+      "Scanning the runways…",
+      "Consulting the mood board…",
+      "Almost dressed…",
+    ];
+
+    // ─── HELPERS ─────────────────────────────────────────────
+
+    function esc(str) {
+      // Escape HTML to prevent XSS from user input
+      return String(str)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;");
+    }
+
+    // ─── RENDER ──────────────────────────────────────────────
+    // Clears the #app div and repaints the current screen.
+
+    let loadingInterval = null; // holds the setInterval for loading text
+
+    function render() {
+      // Clear any running loading animation
+      if (loadingInterval) { clearInterval(loadingInterval); loadingInterval = null; }
+
+      const app = document.getElementById("app");
+      switch (state.screen) {
+        case "landing":   app.innerHTML = renderLanding();    attachLandingHandlers();   break;
+        case "interview": app.innerHTML = renderInterview();  attachInterviewHandlers(); break;
+        case "loading":   app.innerHTML = renderLoading();    startLoadingAnimation();   break;
+        case "recommend": app.innerHTML = renderRecommend();  attachRecommendHandlers(); break;
+        case "output":    app.innerHTML = renderOutput();     attachOutputHandlers();    break;
+      }
+    }
+
+    // ─── LANDING SCREEN ──────────────────────────────────────
+
+    function renderLanding() {
+      return `
+        <div class="landing-screen">
+          <div class="wordmark">fitscout</div>
+          <p class="tagline">Your AI-powered outfit director.</p>
+          <form class="landing-form" id="landing-form">
+            <input
+              class="event-input"
+              id="event-input"
+              type="text"
+              placeholder="What are you going to? Paste an invite link or describe the event."
+              autocomplete="off"
+              autofocus
+            />
+            <button class="cta-btn" type="submit" id="style-btn" disabled>Style me.</button>
+          </form>
+          <p class="landing-hint">
+            Try: "rooftop birthday party in July" · "formal gallery opening Friday night" · "work happy hour"
+          </p>
+        </div>`;
+    }
+
+    function attachLandingHandlers() {
+      const input = document.getElementById("event-input");
+      const btn   = document.getElementById("style-btn");
+      const form  = document.getElementById("landing-form");
+
+      input.addEventListener("input", () => {
+        btn.disabled = !input.value.trim();
+      });
+
+      form.addEventListener("submit", e => {
+        e.preventDefault();
+        const val = input.value.trim();
+        if (!val) return;
+        state.eventPrompt = val;
+        state.interviewStep = 0;
+        state.interviewSelected = null;
+        state.answers = {};
+        state.screen = "interview";
+        render();
+      });
+    }
+
+    // ─── INTERVIEW SCREEN ─────────────────────────────────────
+
+    function renderInterview() {
+      const q    = QUESTIONS[state.interviewStep];
+      const step = state.interviewStep;
+      const sel  = state.interviewSelected;
+      const isLast = step === QUESTIONS.length - 1;
+
+      const dots = QUESTIONS.map((_, i) => {
+        const cls = i < step ? "progress-dot done" : i === step ? "progress-dot active" : "progress-dot";
+        return `<span class="${cls}"></span>`;
+      }).join("");
+
+      const chips = q.options.map(opt => {
+        const cls = sel === opt ? "chip chip-selected" : "chip";
+        return `<button class="${cls}" data-option="${esc(opt)}" type="button">${esc(opt)}</button>`;
+      }).join("");
+
+      return `
+        <div class="interview-screen">
+          <div class="interview-card">
+            <div class="step-meta">
+              <span class="step-label">${step + 1} / ${QUESTIONS.length}</span>
+              <div class="progress-dots">${dots}</div>
+            </div>
+            <p class="event-context">
+              <span class="event-context-label">Event:</span> ${esc(state.eventPrompt)}
+            </p>
+            <h2 class="question-text">${esc(q.prompt)}</h2>
+            <div class="option-chips">${chips}</div>
+            <button class="cta-btn" id="next-btn" ${sel ? "" : "disabled"}>
+              ${isLast ? "Find my look →" : "Next →"}
+            </button>
+          </div>
+        </div>`;
+    }
+
+    function attachInterviewHandlers() {
+      // Chip selection
+      document.querySelectorAll(".chip").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.interviewSelected = btn.dataset.option;
+          // Re-render just the interview screen to update chip highlights and enable Next
+          render();
+        });
+      });
+
+      // Next / submit
+      document.getElementById("next-btn").addEventListener("click", () => {
+        if (!state.interviewSelected) return;
+        const q = QUESTIONS[state.interviewStep];
+        state.answers[q.id] = state.interviewSelected;
+
+        if (state.interviewStep < QUESTIONS.length - 1) {
+          state.interviewStep++;
+          state.interviewSelected = null;
+          render();
+        } else {
+          // All 3 questions answered — run matching
+          runMatchingWithLoading(null);
+        }
+      });
+    }
+
+    // ─── LOADING SCREEN ───────────────────────────────────────
+
+    function renderLoading() {
+      return `
+        <div class="loading-screen">
+          <div class="loading-dot-row">
+            <span class="loading-dot d1"></span>
+            <span class="loading-dot d2"></span>
+            <span class="loading-dot d3"></span>
+          </div>
+          <p class="loading-text" id="loading-text">${LOADING_LINES[0]}</p>
+        </div>`;
+    }
+
+    function startLoadingAnimation() {
+      let idx = 0;
+      loadingInterval = setInterval(() => {
+        idx = (idx + 1) % LOADING_LINES.length;
+        const el = document.getElementById("loading-text");
+        if (el) el.textContent = LOADING_LINES[idx];
+      }, 700);
+    }
+
+    // Runs the matching logic after a brief loading pause
+    function runMatchingWithLoading(refinement) {
+      state.screen = "loading";
+      render();
+      setTimeout(() => {
+        const top3 = getTopThemes(
+          state.answers.eventType,
+          state.answers.vibe,
+          state.answers.constraint,
+          refinement
+        );
+        state.themes    = top3;
+        state.refinement = refinement;
+        state.screen    = "recommend";
+        render();
+      }, 1600);
+    }
+
+    // ─── RECOMMENDATION SCREEN ────────────────────────────────
+
+    function renderRecommend() {
+      const cards = state.themes.map((theme, i) => `
+        <div class="theme-card">
+          <span class="price-badge">${esc(theme.price)}</span>
+          <h3 class="theme-name">${esc(theme.name)}</h3>
+          <p class="theme-description">${esc(theme.description)}</p>
+          <div class="theme-tags">
+            ${theme.vibeTags.map(t => `<span class="vibe-tag">${esc(t)}</span>`).join("")}
+          </div>
+          <p class="theme-why">
+            <span class="why-label">Why it works → </span>
+            Scored for <em>${esc(theme.vibes.slice(0,2).join(" · "))}</em> vibes at a <em>${esc(theme.events[0])}</em>.
+          </p>
+          <button class="select-theme-btn" data-theme-index="${i}">Shop this look →</button>
+        </div>`).join("");
+
+      const refineBtns = REFINEMENT_BUTTONS.map(label => {
+        const active = state.refinement === label ? " refinement-btn-active" : "";
+        return `<button class="refinement-btn${active}" data-refine="${esc(label)}">${esc(label)}</button>`;
+      }).join("");
+
+      return `
+        <div class="recommendation-screen">
+          <h2 class="section-heading">Your looks.</h2>
+          <p class="section-sub">
+            Based on: <strong>${esc(state.answers.eventType)}</strong> ·
+            <strong>${esc(state.answers.vibe)}</strong> ·
+            <strong>${esc(state.answers.constraint)}</strong>
+          </p>
+          <div class="theme-cards">${cards}</div>
+          <div class="refinement-section">
+            <p class="refinement-label">Not quite right? Adjust the direction:</p>
+            <div class="refinement-buttons">${refineBtns}</div>
+          </div>
+        </div>`;
+    }
+
+    function attachRecommendHandlers() {
+      // Select a theme
+      document.querySelectorAll(".select-theme-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const i = parseInt(btn.dataset.themeIndex, 10);
+          state.selectedTheme = state.themes[i];
+          state.components    = buildSearchLinks(state.selectedTheme, state.answers.constraint);
+          state.screen        = "output";
+          render();
+        });
+      });
+
+      // Refinement buttons
+      document.querySelectorAll(".refinement-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          runMatchingWithLoading(btn.dataset.refine);
+        });
+      });
+    }
+
+    // ─── OUTPUT SCREEN ────────────────────────────────────────
+
+    function renderOutput() {
+      const compCards = state.components.map(comp => {
+        const links = comp.links.map(l =>
+          `<a class="store-link" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(l.name)} →</a>`
+        ).join("");
+        return `
+          <div class="component-card">
+            <div class="comp-header">
+              <span class="comp-emoji">${comp.emoji}</span>
+              <div>
+                <p class="comp-category">${esc(comp.category)}</p>
+                <p class="comp-item-label">${esc(comp.label)}</p>
+              </div>
+            </div>
+            <p class="comp-reason">${esc(comp.reason)}</p>
+            <div class="store-links">${links}</div>
+          </div>`;
+      }).join("");
+
+      return `
+        <div class="output-screen">
+          <div class="output-header">
+            <h2 class="section-heading">
+              Shopping for: <span class="theme-title-inline">${esc(state.selectedTheme.name)}</span>
+            </h2>
+            <p class="output-sub">Tap any link to search across stores. All links open in a new tab.</p>
+          </div>
+          <div class="component-cards">${compCards}</div>
+          <button class="back-btn" id="back-btn">← Start over</button>
+        </div>`;
+    }
+
+    function attachOutputHandlers() {
+      document.getElementById("back-btn").addEventListener("click", () => {
+        // Reset state and go back to landing
+        Object.assign(state, {
+          screen: "landing",
+          eventPrompt: "",
+          answers: {},
+          themes: [],
+          refinement: null,
+          selectedTheme: null,
+          components: [],
+          interviewStep: 0,
+          interviewSelected: null,
+        });
+        render();
+      });
+    }
+
+    // ─── BOOT ─────────────────────────────────────────────────
+    render();
+  </script>
+</body>
 </html>
